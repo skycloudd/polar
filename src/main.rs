@@ -30,6 +30,14 @@ fn main() -> Result<(), Box<dyn core::error::Error>> {
 
     let mut evaluator = Evaluator::default();
 
+    for (name, value) in [
+        ("pi", core::f64::consts::PI),
+        ("tau", core::f64::consts::TAU),
+        ("e", core::f64::consts::E),
+    ] {
+        evaluator.insert(name, value);
+    }
+
     eprintln!("Welcome to Polar v{}!", env!("CARGO_PKG_VERSION"));
     eprintln!("Type `help` for help.");
     eprintln!("Type `exit` to exit the REPL.");
@@ -47,6 +55,8 @@ fn main() -> Result<(), Box<dyn core::error::Error>> {
 
         match input {
             Ok(input) => {
+                editor.add_history_entry(&input)?;
+
                 let file_id = FileId::new(files.add("<stdin>", input.clone()));
 
                 match handle_input(&mut evaluator, &files, &input, File::Repl(file_id))? {

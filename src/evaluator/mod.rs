@@ -70,8 +70,20 @@ impl Evaluator {
                 Ok(ControlFlow::Break(()))
             }
             Statement::Vars => {
-                for (name, value) in &self.names {
-                    println!("{} = {}", name.blue(), value.display(self.options));
+                let mut vars = self.names.iter().collect::<Vec<_>>();
+
+                vars.sort_by_key(|(name, _)| *name);
+
+                for (name, value) in vars {
+                    println!(
+                        "{} = {}{}",
+                        name.blue(),
+                        value.display(self.options),
+                        match value {
+                            Value::Number(num) => format!(" = ({num})"),
+                        }
+                        .black()
+                    );
                 }
 
                 Ok(ControlFlow::Continue(None))
@@ -122,6 +134,12 @@ impl Evaluator {
                 }
             }
         }
+    }
+
+    pub fn insert(&mut self, name: &'static str, value: f64) {
+        let value = Value::Number(Rational::try_from(value).unwrap());
+
+        self.names.insert(name, value);
     }
 
     pub const fn options(&self) -> ToSciOptions {
