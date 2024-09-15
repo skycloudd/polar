@@ -13,6 +13,7 @@ pub enum Statement {
     FullPrecision,
     Help,
     Exit,
+    Vars,
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]

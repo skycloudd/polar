@@ -40,6 +40,7 @@ pub fn lexer<'src>(
             text::keyword("fullprecision").to(Kw::FullPrecision),
             text::keyword("help").to(Kw::Help),
             text::keyword("exit").to(Kw::Exit),
+            text::keyword("vars").to(Kw::Vars),
         ))
         .map(Simple::Kw)
         .boxed();

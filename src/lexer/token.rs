@@ -62,6 +62,7 @@ pub enum Kw {
     FullPrecision,
     Help,
     Exit,
+    Vars,
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -109,6 +110,7 @@ impl core::fmt::Display for Kw {
                 Self::FullPrecision => "fullprecision",
                 Self::Help => "help",
                 Self::Exit => "exit",
+                Self::Vars => "vars",
             }
         )
     }

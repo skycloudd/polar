@@ -49,7 +49,21 @@ fn statement<'src: 'tok, 'tok>(
         .map(|()| Statement::Exit)
         .boxed();
 
-    choice((assign, expr, full_precision, set_precision, help, exit)).boxed()
+    let vars = just(Token::Simple(Simple::Kw(Kw::Vars)))
+        .ignored()
+        .map(|()| Statement::Vars)
+        .boxed();
+
+    choice((
+        assign,
+        expr,
+        full_precision,
+        set_precision,
+        help,
+        exit,
+        vars,
+    ))
+    .boxed()
 }
 
 fn expression<'src: 'tok, 'tok>(

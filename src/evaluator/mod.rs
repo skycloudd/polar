@@ -10,6 +10,7 @@ use malachite::{
     },
     Rational,
 };
+use owo_colors::OwoColorize;
 use rustc_hash::FxHashMap;
 
 #[derive(Debug, Default)]
@@ -67,6 +68,13 @@ impl Evaluator {
                 eprintln!("Exiting...");
 
                 Ok(ControlFlow::Break(()))
+            }
+            Statement::Vars => {
+                for (name, value) in &self.names {
+                    println!("{} = {}", name.blue(), value.display(self.options));
+                }
+
+                Ok(ControlFlow::Continue(None))
             }
         }
     }
