@@ -6,12 +6,10 @@ pub struct Span {
 }
 
 impl Span {
-    #[must_use]
     pub fn zero(file_id: File) -> Self {
         chumsky::span::Span::new(file_id, 0..0)
     }
 
-    #[must_use]
     pub const fn range(&self) -> core::ops::Range<usize> {
         self.start..self.end
     }
@@ -47,7 +45,6 @@ impl chumsky::span::Span for Span {
 pub struct FileId(pub usize);
 
 impl FileId {
-    #[must_use]
     pub const fn new(id: usize) -> Self {
         Self(id)
     }
@@ -69,35 +66,34 @@ impl<T> Spanned<T> {
         Spanned(f(self.0), self.1)
     }
 
-    #[must_use]
-    pub fn map_span(self, f: impl FnOnce(Span) -> Span) -> Self {
-        Self(self.0, f(self.1))
-    }
+    // pub fn map_span(self, f: impl FnOnce(Span) -> Span) -> Self {
+    //     Self(self.0, f(self.1))
+    // }
 
-    pub const fn as_ref(&self) -> Spanned<&T> {
-        Spanned(&self.0, self.1)
-    }
+    // pub fn map_with<U>(&self, f: impl FnOnce(&T, Span) -> U) -> Spanned<U> {
+    //     Spanned(f(&self.0, self.1), self.1)
+    // }
 
-    pub fn as_mut(&mut self) -> Spanned<&mut T> {
-        Spanned(&mut self.0, self.1)
-    }
+    // pub const fn as_ref(&self) -> Spanned<&T> {
+    //     Spanned(&self.0, self.1)
+    // }
 
-    pub fn map_with<U>(&self, f: impl FnOnce(&T, Span) -> U) -> Spanned<U> {
-        Spanned(f(&self.0, self.1), self.1)
-    }
+    // pub fn as_mut(&mut self) -> Spanned<&mut T> {
+    //     Spanned(&mut self.0, self.1)
+    // }
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum File {
-    FileId(FileId),
+    // FileId(FileId),
     Repl(FileId),
 }
 
 impl File {
-    #[must_use]
-    pub const fn id(&self) -> FileId {
+    pub const fn id(self) -> FileId {
         match self {
-            Self::FileId(id) | Self::Repl(id) => *id,
+            // Self::FileId(id) => id,
+            Self::Repl(id) => id,
         }
     }
 }

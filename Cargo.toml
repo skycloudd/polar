@@ -11,7 +11,9 @@ exclude = [".github"]
 [dependencies]
 chumsky = "1.0.0-alpha.7"
 codespan-reporting = "0.11.1"
+lasso = { version = "0.7.3", features = ["multi-threaded"] }
 malachite = "0.4.16"
+rustc-hash = "2.0.0"
 rustyline = "14.0.0"
 
 [lints.rust]

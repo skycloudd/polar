@@ -14,27 +14,41 @@ pub trait Diag {
 
 #[derive(Debug)]
 pub struct ErrorSpan {
-    pub message: Option<String>,
-    pub span: Span,
-    pub label_style: LabelStyle,
+    message: Option<String>,
+    span: Span,
+    label_style: LabelStyle,
 }
 
 impl ErrorSpan {
-    #[must_use]
-    pub const fn primary(message: Option<String>, span: Span) -> Self {
+    fn primary(message: impl Into<String>, span: Span) -> Self {
         Self {
-            message,
+            message: Some(message.into()),
             span,
             label_style: LabelStyle::Primary,
         }
     }
 
-    #[must_use]
-    pub const fn secondary(message: Option<String>, span: Span) -> Self {
+    const fn primary_span(span: Span) -> Self {
         Self {
-            message,
+            message: None,
             span,
-            label_style: LabelStyle::Secondary,
+            label_style: LabelStyle::Primary,
         }
     }
+
+    // fn secondary(message: impl Into<String>, span: Span) -> Self {
+    //     Self {
+    //         message: Some(message.into()),
+    //         span,
+    //         label_style: LabelStyle::Secondary,
+    //     }
+    // }
+
+    // const fn secondary_span(span: Span) -> Self {
+    //     Self {
+    //         message: None,
+    //         span,
+    //         label_style: LabelStyle::Secondary,
+    //     }
+    // }
 }

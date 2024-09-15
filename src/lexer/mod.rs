@@ -9,7 +9,6 @@ type ParserInput<'src> = WithContext<Span, &'src str>;
 
 type ParserExtra<'src> = extra::Err<Rich<'src, char, Span, &'src str>>;
 
-#[must_use]
 pub fn lexer<'src>(
 ) -> impl Parser<'src, ParserInput<'src>, Vec<Spanned<Token<'src>>>, ParserExtra<'src>> {
     recursive(|tokens| {
@@ -23,16 +22,21 @@ pub fn lexer<'src>(
                         .or_not(),
                 )
                 .map(move |(before, after)| {
-                    let str_to_digits = |s: &str| {
+                    let str_to_digits = |s: &str| -> Vec<_> {
                         s.chars()
                             .map(|c| Natural::from(c.to_digit(base).unwrap()))
                             .collect()
                     };
 
+                    let mut before = str_to_digits(before);
+                    before.reverse();
+
+                    let after = after.map_or_else(Vec::new, str_to_digits);
+
                     Rational::from_digits(
                         &Natural::from(base),
-                        str_to_digits(before),
-                        RationalSequence::from_vec(after.map_or_else(Vec::new, str_to_digits)),
+                        before,
+                        RationalSequence::from_vec(after),
                     )
                 })
                 .map(Simple::Number)
@@ -41,15 +45,19 @@ pub fn lexer<'src>(
 
         let decimal_number = number_base(10);
 
-        let keyword = choice((text::keyword("to").to(Kw::To),))
-            .map(Simple::Kw)
-            .boxed();
+        let keyword = choice((
+            text::keyword("to").to(Kw::To),
+            text::keyword("precision").to(Kw::Precision),
+        ))
+        .map(Simple::Kw)
+        .boxed();
 
         let punctuation = choice((
             just('+').to(Punc::Plus),
             just('-').to(Punc::Minus),
             just('*').to(Punc::Star),
             just('/').to(Punc::Slash),
+            just('=').to(Punc::Equals),
         ))
         .map(Simple::Punc)
         .boxed();

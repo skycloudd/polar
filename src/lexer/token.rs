@@ -21,6 +21,7 @@ pub enum Simple<'src> {
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Kw {
     To,
+    Precision,
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -29,6 +30,7 @@ pub enum Punc {
     Minus,
     Star,
     Slash,
+    Equals,
 }
 
 impl core::fmt::Display for Token<'_> {
@@ -59,6 +61,7 @@ impl core::fmt::Display for Kw {
             "{}",
             match self {
                 Self::To => "to",
+                Self::Precision => "precision",
             }
         )
     }
@@ -74,6 +77,7 @@ impl core::fmt::Display for Punc {
                 Self::Minus => "-",
                 Self::Star => "*",
                 Self::Slash => "/",
+                Self::Equals => "=",
             }
         )
     }

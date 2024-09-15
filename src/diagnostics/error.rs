@@ -1,9 +1,9 @@
-use crate::span::Span;
-
 use super::{Diag, ErrorSpan};
+use crate::span::Span;
 use chumsky::error::{Rich, RichReason};
 use codespan_reporting::diagnostic::Severity;
 use core::fmt::Display;
+use core::num::ParseIntError;
 use std::borrow::Cow;
 
 #[derive(Clone, Debug)]
@@ -16,6 +16,15 @@ pub enum Error {
     Custom {
         message: String,
         span: Span,
+    },
+    UndefinedVariable {
+        name: &'static str,
+        span: Span,
+    },
+    PrecisionZero(Span),
+    InvalidPrecision {
+        span: crate::span::Span,
+        err: ParseIntError,
     },
 }
 
@@ -34,6 +43,11 @@ impl Diag for Error {
             )
             .into(),
             Self::Custom { message, span: _ } => message.into(),
+            Self::UndefinedVariable { name, span: _ } => {
+                format!("Undefined variable `{name}`").into()
+            }
+            Self::PrecisionZero(_) => "Precision must be greater than zero".into(),
+            Self::InvalidPrecision { span: _, err } => format!("Invalid precision: {err}").into(),
         }
     }
 
@@ -45,19 +59,30 @@ impl Diag for Error {
                 found,
                 span,
             } => vec![ErrorSpan::primary(
-                Some(format!(
-                    "Found {}",
-                    found.as_deref().unwrap_or("end of file")
-                )),
+                format!("Found {}", found.as_deref().unwrap_or("end of file")),
                 *span,
             )],
-            Self::Custom { message: _, span } => vec![ErrorSpan::primary(None, *span)],
+            Self::Custom { message: _, span } => vec![ErrorSpan::primary_span(*span)],
+            Self::UndefinedVariable { name: _, span } => {
+                vec![ErrorSpan::primary("This variable is undefined", *span)]
+            }
+            Self::PrecisionZero(span) => vec![ErrorSpan::primary_span(*span)],
+            Self::InvalidPrecision { span, err: _ } => vec![ErrorSpan::primary_span(*span)],
         }
     }
 
     fn notes(&self) -> Vec<String> {
         match self {
-            Self::ExpectedFound { .. } | Self::Custom { .. } => vec![],
+            Self::ExpectedFound { .. } | Self::Custom { .. } | Self::PrecisionZero(_) => vec![],
+            Self::UndefinedVariable { name, span: _ } => {
+                vec![
+                    format!("Consider assigning a value to `{name}`:"),
+                    format!("{name} = <value>"),
+                ]
+            }
+            Self::InvalidPrecision { span: _, err: _ } => {
+                vec!["The precision must be a natural number".into()]
+            }
         }
     }
 
@@ -66,7 +91,6 @@ impl Diag for Error {
     }
 }
 
-#[must_use]
 pub fn convert(error: &Rich<impl Display, Span, &str>) -> Vec<Error> {
     fn convert_inner(reason: &RichReason<impl Display, &str>, span: Span) -> Vec<Error> {
         match reason {
