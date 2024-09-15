@@ -46,9 +46,18 @@ impl Evaluator {
 
                     self.options.set_precision(n);
 
+                    eprintln!("Set precision to: {n}");
+
                     Ok(ControlFlow::Continue(None))
                 }
             },
+            Statement::FullPrecision => {
+                self.options.set_size_complete();
+
+                eprintln!("Using full precision");
+
+                Ok(ControlFlow::Continue(None))
+            }
             Statement::Help => {
                 print_help();
 
@@ -132,6 +141,7 @@ fn print_help() {
     println!();
     println!("Commands:");
     println!("  precision <p> - Set the precision of numbers to <p>");
+    println!("  fullprecision - Use full precision for numbers");
     println!("  help - Print this help message");
     println!("  exit - Exit the program");
 }

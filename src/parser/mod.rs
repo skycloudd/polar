@@ -34,6 +34,11 @@ fn statement<'src: 'tok, 'tok>(
         .map(Statement::SetPrecision)
         .boxed();
 
+    let full_precision = just(Token::Simple(Simple::Kw(Kw::FullPrecision)))
+        .ignored()
+        .map(|()| Statement::FullPrecision)
+        .boxed();
+
     let help = just(Token::Simple(Simple::Kw(Kw::Help)))
         .ignored()
         .map(|()| Statement::Help)
@@ -44,7 +49,7 @@ fn statement<'src: 'tok, 'tok>(
         .map(|()| Statement::Exit)
         .boxed();
 
-    choice((assign, expr, set_precision, help, exit)).boxed()
+    choice((assign, expr, full_precision, set_precision, help, exit)).boxed()
 }
 
 fn expression<'src: 'tok, 'tok>(

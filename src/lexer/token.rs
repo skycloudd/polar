@@ -59,6 +59,7 @@ impl core::fmt::Display for Radix {
 pub enum Kw {
     To,
     Precision,
+    FullPrecision,
     Help,
     Exit,
 }
@@ -105,6 +106,7 @@ impl core::fmt::Display for Kw {
             match self {
                 Self::To => "to",
                 Self::Precision => "precision",
+                Self::FullPrecision => "fullprecision",
                 Self::Help => "help",
                 Self::Exit => "exit",
             }

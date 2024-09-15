@@ -10,6 +10,7 @@ pub enum Statement {
         value: Spanned<Expression>,
     },
     SetPrecision(Spanned<Expression>),
+    FullPrecision,
     Help,
     Exit,
 }
