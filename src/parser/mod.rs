@@ -5,6 +5,7 @@ use crate::{
 };
 use ast::{BinaryOp, Expression, Identifier, Statement, UnaryOp};
 use chumsky::{extra, input::SpannedInput, prelude::*};
+use malachite::{rational_sequences::RationalSequence, Natural, Rational};
 
 pub mod ast;
 
@@ -108,7 +109,7 @@ fn expression<'src: 'tok, 'tok>(
 
     recursive(|expression| {
         let number = select! {
-            Token::Simple(Simple::Number(num)) => num,
+            Token::Simple(Simple::Number{ before, after, radix }) => rational_from_str(before, after, radix.to_u32()),
         }
         .map(Expression::Number);
 
@@ -169,4 +170,25 @@ where
             Token::Parentheses(tokens) = e => tokens.as_slice().spanned(e.span()),
         })
     }
+}
+
+fn rational_from_str(before: &str, after: Option<&str>, radix: u32) -> Rational {
+    let before = before
+        .chars()
+        .rev()
+        .map(|c| Natural::from(c.to_digit(radix).unwrap()))
+        .collect();
+
+    let after = after.map_or_else(Vec::new, |after| {
+        after
+            .chars()
+            .map(|c| Natural::from(c.to_digit(radix).unwrap()))
+            .collect()
+    });
+
+    Rational::from_digits(
+        &Natural::from(radix),
+        before,
+        RationalSequence::from_vec(after),
+    )
 }

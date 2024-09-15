@@ -1,7 +1,6 @@
 use crate::span::Span;
 use chumsky::{input::WithContext, prelude::*};
-use malachite::{rational_sequences::RationalSequence, Natural, Rational};
-use token::{Kw, Punc, Simple, Spanned, Token};
+use token::{Kw, Punc, Radix, Simple, Spanned, Token};
 
 pub mod token;
 
@@ -14,36 +13,26 @@ pub fn lexer<'src>(
     recursive(|tokens| {
         let ident = text::ascii::ident().map(Simple::Identifier).boxed();
 
-        let number_base = |base: u32| {
-            text::int(base)
+        let number_base = |radix: Radix| {
+            text::int(radix.to_u32())
                 .then(
                     just('.')
-                        .ignore_then(text::digits(base).to_slice())
+                        .ignore_then(text::digits(radix.to_u32()).to_slice())
                         .or_not(),
                 )
-                .map(move |(before, after)| {
-                    let str_to_digits = |s: &str| -> Vec<_> {
-                        s.chars()
-                            .map(|c| Natural::from(c.to_digit(base).unwrap()))
-                            .collect()
-                    };
-
-                    let mut before = str_to_digits(before);
-                    before.reverse();
-
-                    let after = after.map_or_else(Vec::new, str_to_digits);
-
-                    Rational::from_digits(
-                        &Natural::from(base),
-                        before,
-                        RationalSequence::from_vec(after),
-                    )
+                .map(move |(before, after)| Simple::Number {
+                    before,
+                    after,
+                    radix,
                 })
-                .map(Simple::Number)
                 .boxed()
         };
 
-        let decimal_number = number_base(10);
+        let binary_number = just("0b").ignore_then(number_base(Radix::Binary));
+        let octal_number = just("0o").ignore_then(number_base(Radix::Octal));
+        let hexadecimal_number = just("0x").ignore_then(number_base(Radix::Hexadecimal));
+
+        let decimal_number = number_base(Radix::Decimal);
 
         let keyword = choice((
             text::keyword("to").to(Kw::To),
@@ -64,9 +53,17 @@ pub fn lexer<'src>(
         .map(Simple::Punc)
         .boxed();
 
-        let simple = choice((keyword, ident, decimal_number, punctuation))
-            .map(Token::Simple)
-            .boxed();
+        let simple = choice((
+            keyword,
+            ident,
+            binary_number,
+            octal_number,
+            hexadecimal_number,
+            decimal_number,
+            punctuation,
+        ))
+        .map(Token::Simple)
+        .boxed();
 
         let parenthesised = tokens
             .clone()
@@ -95,16 +92,3 @@ pub fn lexer<'src>(
     .then_ignore(end())
     .boxed()
 }
-
-// trait SpannedExt<'src, O> {
-//     fn with_span(self) -> impl Parser<'src, ParserInput<'src>, (O, Span), ParserExtra<'src>>;
-// }
-
-// impl<'src, P, O> SpannedExt<'src, O> for P
-// where
-//     P: Parser<'src, ParserInput<'src>, O, ParserExtra<'src>>,
-// {
-//     fn with_span(self) -> impl Parser<'src, ParserInput<'src>, (O, Span), ParserExtra<'src>> {
-//         self.map_with(|t, e| (t, e.span()))
-//     }
-// }

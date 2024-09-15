@@ -54,7 +54,11 @@ impl Evaluator {
 
                 Ok(ControlFlow::Continue(None))
             }
-            Statement::Exit => Ok(ControlFlow::Break(())),
+            Statement::Exit => {
+                eprintln!("Exiting...");
+
+                Ok(ControlFlow::Break(()))
+            }
         }
     }
 

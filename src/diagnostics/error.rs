@@ -23,7 +23,7 @@ pub enum Error {
     },
     PrecisionZero(Span),
     InvalidPrecision {
-        span: crate::span::Span,
+        span: Span,
         err: ParseIntError,
     },
 }
