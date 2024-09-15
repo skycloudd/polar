@@ -10,6 +10,7 @@ use core::ops::ControlFlow;
 use diagnostics::{error::convert, report::report};
 use evaluator::Evaluator;
 use lasso::ThreadedRodeo;
+use owo_colors::{AnsiColors, OwoColorize as _};
 use rustyline::error::ReadlineError;
 use span::{File, FileId, Span};
 use std::sync::LazyLock;
@@ -22,8 +23,8 @@ mod span;
 
 static RODEO: LazyLock<ThreadedRodeo> = LazyLock::new(ThreadedRodeo::new);
 
-fn main() {
-    let mut editor = rustyline::DefaultEditor::new().unwrap();
+fn main() -> Result<(), Box<dyn core::error::Error>> {
+    let mut editor = rustyline::DefaultEditor::new()?;
 
     let mut files = SimpleFiles::new();
 
@@ -33,15 +34,23 @@ fn main() {
     eprintln!("Type `help` for help.");
     eprintln!("Type `exit` to exit the REPL.");
 
+    let mut previous_success = true;
+
     loop {
-        let input = editor.readline(">> ");
+        let prompt = if previous_success {
+            ">> ".color(AnsiColors::Green)
+        } else {
+            ">> ".color(AnsiColors::Red)
+        };
+
+        let input = editor.readline(&prompt.to_string());
 
         match input {
             Ok(input) => {
                 let file_id = FileId::new(files.add("<stdin>", input.clone()));
 
-                match handle_input(&mut evaluator, &files, &input, File::Repl(file_id)) {
-                    ControlFlow::Continue(()) => {}
+                match handle_input(&mut evaluator, &files, &input, File::Repl(file_id))? {
+                    ControlFlow::Continue(success) => previous_success = success,
                     ControlFlow::Break(()) => break,
                 }
             }
@@ -57,6 +66,8 @@ fn main() {
             }
         }
     }
+
+    Ok(())
 }
 
 fn handle_input(
@@ -64,7 +75,7 @@ fn handle_input(
     files: &SimpleFiles<&str, String>,
     input: &str,
     file_id: File,
-) -> ControlFlow<(), ()> {
+) -> Result<ControlFlow<(), bool>, Box<dyn core::error::Error>> {
     let mut errors = vec![];
 
     let (tokens, lexer_errors) = lexer::lexer()
@@ -94,7 +105,7 @@ fn handle_input(
                 println!("{}", value.display(evaluator.options()));
             }
             Ok(ControlFlow::Continue(None)) => {}
-            Ok(ControlFlow::Break(())) => return ControlFlow::Break(()),
+            Ok(ControlFlow::Break(())) => return Ok(ControlFlow::Break(())),
             Err(err) => errors.push(err),
         }
     }
@@ -105,8 +116,8 @@ fn handle_input(
     for error in &errors {
         let diagnostic = report(error);
 
-        term::emit(&mut writer.lock(), &term_config, files, &diagnostic).unwrap();
+        term::emit(&mut writer.lock(), &term_config, files, &diagnostic)?;
     }
 
-    ControlFlow::Continue(())
+    Ok(ControlFlow::Continue(errors.is_empty()))
 }
