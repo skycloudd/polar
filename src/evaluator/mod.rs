@@ -2,6 +2,7 @@ use crate::{
     diagnostics::error::Error,
     parser::ast::{BinaryOp, Expression, Statement, UnaryOp},
 };
+use core::ops::ControlFlow;
 use malachite::{
     num::{
         basic::traits::Zero,
@@ -18,14 +19,20 @@ pub struct Evaluator {
 }
 
 impl Evaluator {
-    pub fn evaluate(&mut self, stmt: Statement) -> Result<Option<Value>, Error> {
+    pub fn evaluate_statement(
+        &mut self,
+        stmt: Statement,
+    ) -> Result<ControlFlow<(), Option<Value>>, Error> {
         match stmt {
-            Statement::Expression(expr) => self.evaluate_expression(expr.0).map(Some),
+            Statement::Expression(expr) => self
+                .evaluate_expression(expr.0)
+                .map(Some)
+                .map(ControlFlow::Continue),
             Statement::Assign { name, value } => {
                 let value = self.evaluate_expression(value.0)?;
                 self.names.insert(name.0.resolve(), value);
 
-                Ok(None)
+                Ok(ControlFlow::Continue(None))
             }
             Statement::SetPrecision(precision) => match self.evaluate_expression(precision.0)? {
                 Value::Number(Rational::ZERO) => Err(Error::PrecisionZero(precision.1)),
@@ -39,9 +46,15 @@ impl Evaluator {
 
                     self.options.set_precision(n);
 
-                    Ok(None)
+                    Ok(ControlFlow::Continue(None))
                 }
             },
+            Statement::Help => {
+                print_help();
+
+                Ok(ControlFlow::Continue(None))
+            }
+            Statement::Exit => Ok(ControlFlow::Break(())),
         }
     }
 
@@ -106,4 +119,15 @@ impl Value {
             Self::Number(rational) => rational.to_sci_with_options(options).to_string(),
         }
     }
+}
+
+fn print_help() {
+    println!("Syntax:");
+    println!("  <expr> - Evaluate an expression and print the result");
+    println!("  <var> = <expr> - Assign a value to a variable");
+    println!();
+    println!("Commands:");
+    println!("  precision <p> - Set the precision of numbers to <p>");
+    println!("  help - Print this help message");
+    println!("  exit - Exit the program");
 }

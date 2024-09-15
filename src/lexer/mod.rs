@@ -48,6 +48,8 @@ pub fn lexer<'src>(
         let keyword = choice((
             text::keyword("to").to(Kw::To),
             text::keyword("precision").to(Kw::Precision),
+            text::keyword("help").to(Kw::Help),
+            text::keyword("exit").to(Kw::Exit),
         ))
         .map(Simple::Kw)
         .boxed();

@@ -33,7 +33,17 @@ fn statement<'src: 'tok, 'tok>(
         .map(Statement::SetPrecision)
         .boxed();
 
-    choice((assign, expr, set_precision)).boxed()
+    let help = just(Token::Simple(Simple::Kw(Kw::Help)))
+        .ignored()
+        .map(|()| Statement::Help)
+        .boxed();
+
+    let exit = just(Token::Simple(Simple::Kw(Kw::Exit)))
+        .ignored()
+        .map(|()| Statement::Exit)
+        .boxed();
+
+    choice((assign, expr, set_precision, help, exit)).boxed()
 }
 
 fn expression<'src: 'tok, 'tok>(

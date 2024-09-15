@@ -29,6 +29,10 @@ fn main() {
 
     let mut evaluator = Evaluator::default();
 
+    eprintln!("Welcome to Polar v{}!", env!("CARGO_PKG_VERSION"));
+    eprintln!("Type `help` for help.");
+    eprintln!("Type `exit` to exit the REPL.");
+
     loop {
         let input = editor.readline(">> ");
 
@@ -42,7 +46,7 @@ fn main() {
                 }
             }
             Err(err) => {
-                println!("{err}");
+                eprintln!("{err}");
 
                 match err {
                     ReadlineError::Eof | ReadlineError::Interrupted => {
@@ -85,9 +89,12 @@ fn handle_input(
     errors.extend(parser_errors.iter().flat_map(|error| convert(error)));
 
     if let Some(statement) = statement {
-        match evaluator.evaluate(statement) {
-            Ok(Some(value)) => println!("{}", value.display(evaluator.options())),
-            Ok(None) => {}
+        match evaluator.evaluate_statement(statement) {
+            Ok(ControlFlow::Continue(Some(value))) => {
+                println!("{}", value.display(evaluator.options()));
+            }
+            Ok(ControlFlow::Continue(None)) => {}
+            Ok(ControlFlow::Break(())) => return ControlFlow::Break(()),
             Err(err) => errors.push(err),
         }
     }

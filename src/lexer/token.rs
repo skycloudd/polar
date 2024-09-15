@@ -22,6 +22,8 @@ pub enum Simple<'src> {
 pub enum Kw {
     To,
     Precision,
+    Help,
+    Exit,
 }
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -62,6 +64,8 @@ impl core::fmt::Display for Kw {
             match self {
                 Self::To => "to",
                 Self::Precision => "precision",
+                Self::Help => "help",
+                Self::Exit => "exit",
             }
         )
     }

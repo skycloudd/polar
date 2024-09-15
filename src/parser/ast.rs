@@ -10,6 +10,8 @@ pub enum Statement {
         value: Spanned<Expression>,
     },
     SetPrecision(Spanned<Expression>),
+    Help,
+    Exit,
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
